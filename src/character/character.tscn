@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://c07nqsvnx1fsb"]
+[gd_scene load_steps=11 format=3 uid="uid://c07nqsvnx1fsb"]
 
 [ext_resource type="Texture2D" uid="uid://yiab7nlpmq2u" path="res://assets/chars/robin/1.png" id="1_yny20"]
 
@@ -7,24 +7,215 @@ resource_name = "character"
 script/source = "extends CharacterBody2D
 
 var speed := 100.0
+var move_direction := Vector2.ZERO
+var last_direction := Vector2.DOWN
+var is_moving := false
+
+@onready var animation_player := $AnimationPlayer
+var current_anim := \"\"
+
+func _process(delta: float) -> void:
+	if is_moving:
+		play_move_animation(last_direction)
+	else:
+		play_idle_animation(last_direction)
+
 func _physics_process(delta: float) -> void:
-	var direction = Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")
-	direction = direction.normalized()
-	velocity = direction * speed
+	move_direction = Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")
+	velocity = move_direction * speed
 	move_and_slide()
+	
+	is_moving = velocity.length_squared() > 1.0
+	if is_moving:
+		last_direction = velocity.normalized()
+
+func play_move_animation(direction: Vector2):
+	var anim := \"\"
+#	Determine dominant axis
+	if abs(direction.x) > abs(direction.y):
+		anim = \"move_right\" if direction.x > 0.0 else \"move_left\"
+	else:
+		anim = \"move_down\" if direction.y > 0.0 else \"move_up\"
+	
+	if anim != current_anim:
+		current_anim = anim
+		animation_player.play(anim)
+
+func play_idle_animation(direction: Vector2):
+	var anim := \"idle\"
+	if anim != current_anim:
+		current_anim = anim
+		animation_player.play(anim)
 "
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qdbtw"]
 size = Vector2(15, 18)
+
+[sub_resource type="Animation" id="Animation_yny20"]
+resource_name = "move_left"
+length = 0.6
+loop_mode = 1
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [64, 65, 66, 67, 68, 69]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:flip_h")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+
+[sub_resource type="Animation" id="Animation_2p3op"]
+resource_name = "idle"
+length = 0.4
+loop_mode = 1
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3),
+"transitions": PackedFloat32Array(1, 1, 1, 1),
+"update": 1,
+"values": [0, 1, 2, 3]
+}
+
+[sub_resource type="Animation" id="Animation_8mo58"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [0]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:flip_h")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+
+[sub_resource type="Animation" id="Animation_k8eue"]
+resource_name = "move_down"
+length = 0.6
+loop_mode = 1
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [48, 49, 50, 51, 52, 53]
+}
+
+[sub_resource type="Animation" id="Animation_tntuy"]
+resource_name = "move_up"
+length = 0.6
+loop_mode = 1
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [56, 57, 58, 59, 60, 61]
+}
+
+[sub_resource type="Animation" id="Animation_56uj1"]
+resource_name = "move_right"
+length = 0.6
+loop_mode = 1
+step = 0.1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sprite2D:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 0.1, 0.2, 0.3, 0.4, 0.5),
+"transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
+"update": 1,
+"values": [64, 65, 66, 67, 68, 69]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:flip_h")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [true]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_fi36g"]
+_data = {
+&"RESET": SubResource("Animation_8mo58"),
+&"idle": SubResource("Animation_2p3op"),
+&"move_down": SubResource("Animation_k8eue"),
+&"move_left": SubResource("Animation_yny20"),
+&"move_right": SubResource("Animation_56uj1"),
+&"move_up": SubResource("Animation_tntuy")
+}
 
 [node name="CharacterBody2D" type="CharacterBody2D"]
 script = SubResource("GDScript_e5t7k")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("1_yny20")
+flip_h = true
 hframes = 8
 vframes = 15
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2(-0.5, -3)
 shape = SubResource("RectangleShape2D_qdbtw")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_fi36g")
+}
