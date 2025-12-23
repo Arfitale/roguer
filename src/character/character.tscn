@@ -1,0 +1,30 @@
+[gd_scene load_steps=4 format=3 uid="uid://c07nqsvnx1fsb"]
+
+[ext_resource type="Texture2D" uid="uid://yiab7nlpmq2u" path="res://assets/chars/robin/1.png" id="1_yny20"]
+
+[sub_resource type="GDScript" id="GDScript_e5t7k"]
+resource_name = "character"
+script/source = "extends CharacterBody2D
+
+var speed := 100.0
+func _physics_process(delta: float) -> void:
+	var direction = Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")
+	direction = direction.normalized()
+	velocity = direction * speed
+	move_and_slide()
+"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_qdbtw"]
+size = Vector2(15, 18)
+
+[node name="CharacterBody2D" type="CharacterBody2D"]
+script = SubResource("GDScript_e5t7k")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_yny20")
+hframes = 8
+vframes = 15
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(-0.5, -3)
+shape = SubResource("RectangleShape2D_qdbtw")
