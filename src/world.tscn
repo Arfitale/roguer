@@ -1,8 +1,12 @@
-[gd_scene load_steps=2 format=3 uid="uid://k8pyvoxdx21e"]
+[gd_scene load_steps=3 format=4 uid="uid://k8pyvoxdx21e"]
 
 [ext_resource type="PackedScene" uid="uid://c07nqsvnx1fsb" path="res://src/character/character.tscn" id="1_tp5op"]
+[ext_resource type="PackedScene" uid="uid://n23uv4g8gm3r" path="res://src/tiles/base_tiles.tscn" id="2_xlegt"]
 
 [node name="World" type="Node2D"]
+
+[node name="TileMap" parent="." instance=ExtResource("2_xlegt")]
+tile_map_data = PackedByteArray("AAAAAP//AAABAAEAAAABAP//AAABAAEAAAACAP//AAABAAEAAAADAP//AAABAAEAAAADAAAAAAABAAEAAAADAAEAAAABAAEAAAADAAIAAAABAAEAAAACAAIAAAABAAEAAAABAAIAAAABAAEAAAAAAAIAAAABAAEAAAD//wIAAAABAAEAAAD//wEAAAABAAEAAAD//wAAAAABAAEAAAD/////AAABAAEAAAABAAEAAAADAAIAAAAAAAEAAAADAAIAAAACAAEAAAADAAIAAAACAAAAAAADAAIAAAABAAAAAAADAAIAAAAAAAAAAAADAAIAAAA=")
 
 [node name="CharacterBody2D" parent="." instance=ExtResource("1_tp5op")]
 position = Vector2(10, 10)
