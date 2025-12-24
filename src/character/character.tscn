@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3 uid="uid://c07nqsvnx1fsb"]
+[gd_scene load_steps=15 format=3 uid="uid://c07nqsvnx1fsb"]
 
 [ext_resource type="Texture2D" uid="uid://yiab7nlpmq2u" path="res://assets/chars/robin/1.png" id="1_yny20"]
 
@@ -11,14 +11,37 @@ var move_direction := Vector2.ZERO
 var last_direction := Vector2.UP
 var is_trying_to_move := false
 
+
 @onready var animation_player := $AnimationPlayer
+@onready var interaction_area := $InteractionArea
 var current_anim := \"\"
+var interactables: Array[Interactable] = []
+
 
 func _process(delta: float) -> void:
+	if Input.is_action_just_pressed(\"interact\"):
+		interact()
+	
 	if is_trying_to_move:
 		play_move_animation(last_direction)
 	else:
 		play_idle_animation(last_direction)
+
+func interact():
+	if interactables.is_empty():
+		return
+
+	# Choose closest interactable
+	var closest := interactables[0]
+	var closest_dist := global_position.distance_squared_to(closest.global_position)
+
+	for i in interactables:
+		var dist := global_position.distance_squared_to(i.global_position)
+		if dist < closest_dist:
+			closest = i
+			closest_dist = dist
+
+	closest.interact(self)
 
 func _physics_process(delta: float) -> void:
 	move_direction = Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")
@@ -52,10 +75,18 @@ func play_idle_animation(direction: Vector2):
 	if anim != current_anim:
 		current_anim = anim
 		animation_player.play(anim)
+
+func _on_interaction_area_entered(area: Area2D) -> void:
+	if area is Interactable:
+		interactables.append(area)
+
+func _on_interaction_area_exited(area: Area2D) -> void:
+		if area is Interactable:
+			interactables.erase(area)
 "
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qdbtw"]
-size = Vector2(15, 18)
+size = Vector2(8, 12)
 
 [sub_resource type="Animation" id="Animation_8mo58"]
 length = 0.001
@@ -289,6 +320,9 @@ _data = {
 &"move_up": SubResource("Animation_tntuy")
 }
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_yny20"]
+size = Vector2(17, 20)
+
 [node name="CharacterBody2D" type="CharacterBody2D"]
 collision_layer = 2
 script = SubResource("GDScript_e5t7k")
@@ -300,7 +334,7 @@ hframes = 8
 vframes = 15
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(-0.5, -3)
+position = Vector2(1, -1)
 shape = SubResource("RectangleShape2D_qdbtw")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
@@ -310,3 +344,15 @@ libraries = {
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position_smoothing_enabled = true
+
+[node name="InteractionArea" type="Area2D" parent="."]
+collision_layer = 2
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea"]
+position = Vector2(-0.5, -3)
+shape = SubResource("RectangleShape2D_yny20")
+debug_color = Color(0.98203737, 0, 0.36992505, 0.41960785)
+
+[connection signal="area_entered" from="InteractionArea" to="." method="_on_interaction_area_entered"]
+[connection signal="area_exited" from="InteractionArea" to="." method="_on_interaction_area_exited"]

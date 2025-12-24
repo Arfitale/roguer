@@ -1,0 +1,105 @@
+[gd_scene load_steps=11 format=3 uid="uid://d1aeqq8ekahvq"]
+
+[ext_resource type="Texture2D" uid="uid://ch4t02tr1omq1" path="res://assets/objects/basic_chest.png" id="1_ap0pv"]
+
+[sub_resource type="GDScript" id="GDScript_ap0pv"]
+resource_name = "chest"
+script/source = "extends Node2D
+
+signal open
+@onready var animated_sprite := $AnimatedSprite2D
+
+var is_open := false
+
+func _on_open() -> void:
+	if is_open:
+		return
+	animated_sprite.play(\"open\")
+	is_open = true
+"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_h75rm"]
+atlas = ExtResource("1_ap0pv")
+region = Rect2(0, 0, 16, 24)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_fwn8e"]
+atlas = ExtResource("1_ap0pv")
+region = Rect2(16, 0, 16, 24)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_mx6gg"]
+atlas = ExtResource("1_ap0pv")
+region = Rect2(32, 0, 16, 24)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nmebt"]
+atlas = ExtResource("1_ap0pv")
+region = Rect2(48, 0, 16, 24)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_cica2"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_h75rm")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_h75rm")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_fwn8e")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_mx6gg")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nmebt")
+}],
+"loop": false,
+"name": &"open",
+"speed": 5.0
+}]
+
+[sub_resource type="GDScript" id="GDScript_h75rm"]
+resource_name = "interactable"
+script/source = "extends Interactable
+
+@onready var chest := $\"..\"
+
+func interact(player: CharacterBody2D):
+	chest.emit_signal(\"open\")
+"
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1yigr"]
+size = Vector2(19, 20)
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ap0pv"]
+size = Vector2(13, 14)
+
+[node name="BasicChest" type="Node2D"]
+script = SubResource("GDScript_ap0pv")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_cica2")
+autoplay = "default"
+
+[node name="InteractableArea" type="Area2D" parent="."]
+collision_layer = 8
+collision_mask = 0
+script = SubResource("GDScript_h75rm")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractableArea"]
+position = Vector2(-0.5, 5)
+shape = SubResource("RectangleShape2D_1yigr")
+debug_color = Color(0.94125676, 0.15870917, 0.46909106, 0.41960785)
+
+[node name="StaticBody2D" type="StaticBody2D" parent="."]
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2(0, 5)
+shape = SubResource("RectangleShape2D_ap0pv")
+
+[connection signal="open" from="." to="." method="_on_open"]
