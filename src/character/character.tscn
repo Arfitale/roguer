@@ -307,3 +307,6 @@ shape = SubResource("RectangleShape2D_qdbtw")
 libraries = {
 &"": SubResource("AnimationLibrary_fi36g")
 }
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position_smoothing_enabled = true
