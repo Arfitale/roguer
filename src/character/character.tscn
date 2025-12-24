@@ -8,7 +8,7 @@ script/source = "extends CharacterBody2D
 
 var speed := 100.0
 var move_direction := Vector2.ZERO
-var last_direction := Vector2.DOWN
+var last_direction := Vector2.UP
 var is_trying_to_move := false
 
 @onready var animation_player := $AnimationPlayer
@@ -27,7 +27,7 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	
 	if is_trying_to_move:
-		last_direction = velocity.normalized()
+		last_direction = move_direction
 
 func play_move_animation(direction: Vector2):
 	var anim := \"\"
