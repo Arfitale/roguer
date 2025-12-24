@@ -6,30 +6,69 @@
 resource_name = "character"
 script/source = "extends CharacterBody2D
 
-var speed := 100.0
+# Movement
+@export var speed := 100.0
 var move_direction := Vector2.ZERO
-var last_direction := Vector2.UP
+var facing_direction := Vector2.UP
+
+# State
 var is_trying_to_move := false
-var current_anim := \"\"
-var interactables: Array[Interactable] = []
 var is_interacting := false
 
-signal interact_start
-signal interact_finish
-
+# Animation
+var current_anim := \"\"
 @onready var animation_player := $AnimationPlayer
+
+var interactables: Array[Interactable] = []
 @onready var interaction_area := $InteractionArea
 
 func _process(delta: float) -> void:
+	handle_interaction_input()
+	update_animation()
 	if Input.is_action_just_pressed(\"interact\"):
 		interact()
-		
+
+func _physics_process(delta: float) -> void:
 	if is_interacting: return
+	handle_movement()
+
+func update_animation():
+	if is_interacting:
+		play_idle_animation(facing_direction)	
+		return
+		
+	if is_trying_to_move:
+		play_move_animation(facing_direction)
+	else:
+		play_idle_animation(facing_direction)	
+
+func handle_movement():
+	move_direction = Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")
+	velocity = move_direction * speed
+	is_trying_to_move = move_direction != Vector2.ZERO
+	move_and_slide()
 	
 	if is_trying_to_move:
-		play_move_animation(last_direction)
+		facing_direction = move_direction
+
+func play_animation(animation: String):
+	if animation == current_anim:
+		return
+	
+	current_anim = animation
+	animation_player.play(animation)
+
+func direction_to_anim(prefix: String, direction: Vector2):
+	if abs(direction.x) > abs(direction.y):
+		return prefix + (\"_right\" if direction.x > 0 else \"_left\")
 	else:
-		play_idle_animation(last_direction)
+		return prefix + (\"_down\" if direction.y > 0 else \"_up\")
+
+func play_move_animation(direction: Vector2):
+	play_animation(direction_to_anim(\"move\", direction))
+
+func play_idle_animation(direction: Vector2):
+	play_animation(direction_to_anim(\"idle\", direction))
 
 func interact():
 	if interactables.is_empty():
@@ -40,7 +79,7 @@ func interact():
 
 	for i in interactables:
 		var to_obj := (i.global_position - global_position).normalized()
-		var facing_score := last_direction.dot(to_obj)
+		var facing_score := facing_direction.dot(to_obj)
 
 		# Only allow interaction if facing object
 		if facing_score > 0.6:
@@ -49,42 +88,15 @@ func interact():
 				best = i
 
 	if best:
-		emit_signal(\"interact_start\")
+		is_interacting = true
 		best.interact(self)
 
-func _physics_process(delta: float) -> void:
-	if is_interacting: return
-	move_direction = Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")
-	velocity = move_direction * speed
-	is_trying_to_move = move_direction != Vector2.ZERO
-	move_and_slide()
-	
-	if is_trying_to_move:
-		last_direction = move_direction
+func handle_interaction_input():
+	if Input.is_action_just_pressed(\"interact\") and not is_interacting:
+		interact()
 
-func play_move_animation(direction: Vector2):
-	var anim := \"\"
-#	Determine dominant axis
-	if abs(direction.x) > abs(direction.y):
-		anim = \"move_right\" if direction.x > 0.0 else \"move_left\"
-	else:
-		anim = \"move_down\" if direction.y > 0.0 else \"move_up\"
-	
-	if anim != current_anim:
-		current_anim = anim
-		animation_player.play(anim)
-
-func play_idle_animation(direction: Vector2):
-	var anim := \"idle\"
-	
-	if abs(direction.x) > abs(direction.y):
-		anim = \"idle_right\" if direction.x > 0.0 else \"idle_left\"
-	else:
-		anim = \"idle_down\" if direction.y > 0.0 else \"idle_up\"
-	
-	if anim != current_anim:
-		current_anim = anim
-		animation_player.play(anim)
+func finish_interaction():
+	is_interacting = false
 
 func _on_interaction_area_entered(area: Area2D) -> void:
 	if area is Interactable:
@@ -93,13 +105,6 @@ func _on_interaction_area_entered(area: Area2D) -> void:
 func _on_interaction_area_exited(area: Area2D) -> void:
 	if area is Interactable:
 		interactables.erase(area)
-
-func _on_interact_start() -> void:
-	is_interacting = true
-	play_idle_animation(last_direction)
-
-func _on_interact_finish() -> void:
-	is_interacting = false
 "
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qdbtw"]
@@ -371,7 +376,5 @@ position = Vector2(-0.5, -3)
 shape = SubResource("RectangleShape2D_yny20")
 debug_color = Color(0.98203737, 0, 0.36992505, 0.41960785)
 
-[connection signal="interact_finish" from="." to="." method="_on_interact_finish"]
-[connection signal="interact_start" from="." to="." method="_on_interact_start"]
 [connection signal="area_entered" from="InteractionArea" to="." method="_on_interaction_area_entered"]
 [connection signal="area_exited" from="InteractionArea" to="." method="_on_interaction_area_exited"]

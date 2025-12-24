@@ -6,19 +6,7 @@
 resource_name = "chest"
 script/source = "extends Node2D
 
-signal open
-@onready var animated_sprite := $AnimatedSprite2D
-
 var is_open := false
-var item := \"any item\"
-
-func _on_open(player: CharacterBody2D) -> void:
-	if is_open:	return
-	animated_sprite.play(\"open\")
-	await animated_sprite.animation_finished
-	is_open = true
-	player.emit_signal(\"interact_finish\")
-	
 "
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_h75rm"]
@@ -70,9 +58,14 @@ resource_name = "interactable"
 script/source = "extends Interactable
 
 @onready var chest := $\"..\"
+@onready var animated_sprite := $\"../AnimatedSprite2D\"
 
 func interact(player: CharacterBody2D):
-	await chest.emit_signal(\"open\", player)
+	if chest.is_open:	return
+	animated_sprite.play(\"open\")
+	await animated_sprite.animation_finished
+	chest.is_open = true
+	player.finish_interaction()
 "
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1yigr"]
@@ -104,5 +97,3 @@ collision_mask = 0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
 position = Vector2(0, 5)
 shape = SubResource("RectangleShape2D_ap0pv")
-
-[connection signal="open" from="." to="." method="_on_open"]
