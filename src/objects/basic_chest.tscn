@@ -10,12 +10,15 @@ signal open
 @onready var animated_sprite := $AnimatedSprite2D
 
 var is_open := false
+var item := \"any item\"
 
-func _on_open() -> void:
-	if is_open:
-		return
+func _on_open(player: CharacterBody2D) -> void:
+	if is_open:	return
 	animated_sprite.play(\"open\")
+	await animated_sprite.animation_finished
 	is_open = true
+	player.emit_signal(\"interact_finish\")
+	
 "
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_h75rm"]
@@ -69,7 +72,7 @@ script/source = "extends Interactable
 @onready var chest := $\"..\"
 
 func interact(player: CharacterBody2D):
-	chest.emit_signal(\"open\")
+	await chest.emit_signal(\"open\", player)
 "
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1yigr"]

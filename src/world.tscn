@@ -17,7 +17,16 @@ position = Vector2(120, -32)
 position = Vector2(168, 0)
 
 [node name="BasicChest3" parent="." instance=ExtResource("3_0qwtu")]
-position = Vector2(24, -32)
+position = Vector2(104, 96)
+
+[node name="BasicChest4" parent="." instance=ExtResource("3_0qwtu")]
+position = Vector2(264, 304)
+
+[node name="BasicChest5" parent="." instance=ExtResource("3_0qwtu")]
+position = Vector2(-8, 208)
+
+[node name="BasicChest6" parent="." instance=ExtResource("3_0qwtu")]
+position = Vector2(24, 224)
 
 [node name="CharacterBody2D" parent="." instance=ExtResource("1_tp5op")]
 position = Vector2(54.437138, -8.182526)
