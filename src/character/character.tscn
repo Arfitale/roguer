@@ -24,8 +24,8 @@ var facing_direction := Vector2.UP
 
 # Combat
 @export var arrow_scene: PackedScene
-@export var attack_duration := 0.3
-@export var attack_cooldown := 0.4
+@export var attack_duration := 0.5
+@export var attack_cooldown := 0.5
 
 @onready var arrow_spawns := {
 	Vector2.UP:    $ArrowSpawnUp,
@@ -149,7 +149,9 @@ func _start_attack():
 	state = CharacterState.ATTACK
 	velocity = Vector2.ZERO
 	_play_attack_animation(facing_direction)
-	await animation_player.animation_finished
+	await get_tree().create_timer(attack_duration).timeout
+	if state != CharacterState.ATTACK:
+		return
 	state = CharacterState.IDLE
 
 func _spawn_arrow():
@@ -168,6 +170,7 @@ func _get_arrow_spawn() -> Marker2D:
 	return arrow_spawns.get(facing_direction, $ArrowSpawnDown)
 
 func _on_attack_release():
+	if state != CharacterState.ATTACK: return
 	_spawn_arrow()
 
 func _on_interaction_area_entered(area: Area2D) -> void:
