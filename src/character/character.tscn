@@ -94,7 +94,13 @@ func _handle_movement():
 	move_and_slide()
 	
 	if input_direction != Vector2.ZERO:
-		facing_direction = input_direction
+		facing_direction = _snap_to_cardinal(input_direction)
+
+func _snap_to_cardinal(dir: Vector2) -> Vector2:
+	if abs(dir.x) > abs(dir.y):
+		return Vector2.RIGHT if dir.x > 0 else Vector2.LEFT
+	else:
+		return Vector2.DOWN if dir.y > 0 else Vector2.UP
 
 # Animation Handler
 func _play_animation(animation: String):
