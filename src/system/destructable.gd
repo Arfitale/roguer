@@ -1,21 +1,16 @@
 extends Node
-class_name Destructable
+class_name Destructible
 
-@export var max_health: int = 1
-@export var health := max_health: 
-	get():
-		return health
-	set(value):
-		health = clampi(value, 0, max_health)
-		if health == 0:
-			print(true)
-			_on_health_empty()
+@export var max_health := 1
+var health := 1
 
-func _ready() -> void:
+func _ready():
 	health = max_health
 
-func take_damage(damage: int) -> void:
-	pass
+func take_damage(amount: int) -> void:
+	health -= amount
+	if health <= 0:
+		_on_destroyed()
 
-func _on_health_empty() -> void:
-	pass
+func _on_destroyed() -> void:
+	queue_free()

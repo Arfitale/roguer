@@ -13,11 +13,12 @@ var direction := Vector2.ZERO
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	direction = direction.normalized()
 	await get_tree().create_timer(lifetime).timeout
 	queue_free()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	position += direction * speed * delta
 
 func _on_area_entered(area: Area2D) -> void:

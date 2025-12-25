@@ -3,14 +3,11 @@
 [ext_resource type="Texture2D" uid="uid://icqr1f8impx" path="res://assets/objects/table.png" id="1_4jc53"]
 
 [sub_resource type="GDScript" id="GDScript_4jc53"]
-script/source = "extends Destructable
+script/source = "extends Destructible
 
 @onready var animated_sprite := $AnimatedSprite2D
 
-func take_damage(damage: int) -> void:
-	health -= damage
-	
-func _on_health_empty() -> void:
+func _on_destroyed() -> void:
 	animated_sprite.play(\"destroyed\")
 	$ObjectHurtbox.queue_free()
 "
