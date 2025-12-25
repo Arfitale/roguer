@@ -6,71 +6,94 @@
 resource_name = "character"
 script/source = "extends CharacterBody2D
 
+# State
+enum CharacterState {IDLE, MOVE, INTERACT}
+var state := CharacterState.IDLE
+
 # Movement
 @export var speed := 100.0
-var move_direction := Vector2.ZERO
+var input_direction := Vector2.ZERO
 var facing_direction := Vector2.UP
-
-# State
-var is_trying_to_move := false
-var is_interacting := false
 
 # Animation
 var current_anim := \"\"
 @onready var animation_player := $AnimationPlayer
 
+# Interactables
 var interactables: Array[Interactable] = []
 @onready var interaction_area := $InteractionArea
 
-func _process(delta: float) -> void:
-	handle_interaction_input()
-	update_animation()
-	if Input.is_action_just_pressed(\"interact\"):
-		interact()
+func _process(delta: float):
+	_handle_state_logic()
+	_update_animation()
 
-func _physics_process(delta: float) -> void:
-	if is_interacting: return
-	handle_movement()
-
-func update_animation():
-	if is_interacting:
-		play_idle_animation(facing_direction)	
+func _physics_process(delta: float):
+	if state == CharacterState.INTERACT:
 		return
-		
-	if is_trying_to_move:
-		play_move_animation(facing_direction)
-	else:
-		play_idle_animation(facing_direction)	
+	_handle_movement()
 
-func handle_movement():
-	move_direction = Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")
-	velocity = move_direction * speed
-	is_trying_to_move = move_direction != Vector2.ZERO
+func _handle_state_logic():
+	match state:
+		CharacterState.IDLE:
+			_check_movement_input()
+			_check_interaction_input()
+		
+		CharacterState.MOVE:
+			_check_movement_input()
+			_check_interaction_input()
+
+		CharacterState.INTERACT:
+			pass
+
+func _check_movement_input():
+	if input_direction != Vector2.ZERO:
+		state = CharacterState.MOVE
+	else:
+		state = CharacterState.IDLE
+
+func _check_interaction_input():
+	if Input.is_action_just_pressed(\"interact\"):
+		_interact()
+
+func _update_animation():
+	match state:
+		CharacterState.IDLE:
+			_play_idle_animation(facing_direction)
+
+		CharacterState.MOVE:
+			_play_move_animation(facing_direction)
+
+		CharacterState.INTERACT:
+			_play_idle_animation(facing_direction)
+
+func _handle_movement():
+	input_direction = Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")
+	velocity = input_direction * speed
 	move_and_slide()
 	
-	if is_trying_to_move:
-		facing_direction = move_direction
+	if input_direction != Vector2.ZERO:
+		facing_direction = input_direction
 
-func play_animation(animation: String):
+func _play_animation(animation: String):
 	if animation == current_anim:
 		return
 	
 	current_anim = animation
 	animation_player.play(animation)
 
-func direction_to_anim(prefix: String, direction: Vector2):
+func _direction_to_anim(prefix: String, direction: Vector2):
 	if abs(direction.x) > abs(direction.y):
 		return prefix + (\"_right\" if direction.x > 0 else \"_left\")
 	else:
 		return prefix + (\"_down\" if direction.y > 0 else \"_up\")
 
-func play_move_animation(direction: Vector2):
-	play_animation(direction_to_anim(\"move\", direction))
+func _play_move_animation(direction: Vector2):
+	_play_animation(_direction_to_anim(\"move\", direction))
 
-func play_idle_animation(direction: Vector2):
-	play_animation(direction_to_anim(\"idle\", direction))
+func _play_idle_animation(direction: Vector2):
+	_play_animation(_direction_to_anim(\"idle\", direction))
 
-func interact():
+func _interact():
 	if interactables.is_empty():
 		return
 
@@ -88,15 +111,11 @@ func interact():
 				best = i
 
 	if best:
-		is_interacting = true
+		state = CharacterState.INTERACT
 		best.interact(self)
 
-func handle_interaction_input():
-	if Input.is_action_just_pressed(\"interact\") and not is_interacting:
-		interact()
-
 func finish_interaction():
-	is_interacting = false
+	state =  CharacterState.IDLE
 
 func _on_interaction_area_entered(area: Area2D) -> void:
 	if area is Interactable:
