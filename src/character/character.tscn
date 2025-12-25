@@ -1,5 +1,6 @@
-[gd_scene load_steps=19 format=3 uid="uid://c07nqsvnx1fsb"]
+[gd_scene load_steps=20 format=3 uid="uid://c07nqsvnx1fsb"]
 
+[ext_resource type="PackedScene" uid="uid://ccgchljolgao5" path="res://src/weapon/arrow.tscn" id="1_2p3op"]
 [ext_resource type="Texture2D" uid="uid://yiab7nlpmq2u" path="res://assets/chars/robin/1.png" id="1_yny20"]
 
 [sub_resource type="GDScript" id="GDScript_e5t7k"]
@@ -22,7 +23,16 @@ var input_direction := Vector2.ZERO
 var facing_direction := Vector2.UP
 
 # Combat
+@export var arrow_scene: PackedScene
 @export var attack_duration := 0.3
+@export var attack_cooldown := 0.4
+
+@onready var arrow_spawns := {
+	Vector2.UP:    $ArrowSpawnUp,
+	Vector2.DOWN:  $ArrowSpawnDown,
+	Vector2.LEFT:  $ArrowSpawnLeft,
+	Vector2.RIGHT: $ArrowSpawnRight
+}
 
 # Animation
 var current_anim := \"\"
@@ -138,18 +148,27 @@ func finish_interaction():
 func _start_attack():
 	state = CharacterState.ATTACK
 	velocity = Vector2.ZERO
-	
-	_enable_attack_area()
 	_play_attack_animation(facing_direction)
-	await get_tree().create_timer(attack_duration).timeout
-	_disable_attack_area()
+	await animation_player.animation_finished
 	state = CharacterState.IDLE
 
-func _enable_attack_area():
-	pass
+func _spawn_arrow():
+	if not arrow_scene:
+		return
+	
+	var arrow = arrow_scene.instantiate()
+	get_parent().add_child(arrow)
 
-func _disable_attack_area():
-	pass
+	var spawn := _get_arrow_spawn()
+	arrow.global_position = spawn.global_position
+	arrow.direction = facing_direction
+	arrow.rotation = arrow.direction.angle()
+
+func _get_arrow_spawn() -> Marker2D:
+	return arrow_spawns.get(facing_direction, $ArrowSpawnDown)
+
+func _on_attack_release():
+	_spawn_arrow()
 
 func _on_interaction_area_entered(area: Area2D) -> void:
 	if area is Interactable:
@@ -206,6 +225,18 @@ tracks/0/keys = {
 "transitions": PackedFloat32Array(1, 1, 1, 1),
 "update": 1,
 "values": [0, 1, 2, 3]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:flip_h")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
 }
 
 [sub_resource type="Animation" id="Animation_a5pac"]
@@ -285,6 +316,18 @@ tracks/0/keys = {
 "update": 1,
 "values": [8, 9, 10, 11]
 }
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:flip_h")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
 
 [sub_resource type="Animation" id="Animation_k8eue"]
 resource_name = "move_down"
@@ -302,6 +345,18 @@ tracks/0/keys = {
 "transitions": PackedFloat32Array(1, 1, 1, 1, 1, 1),
 "update": 1,
 "values": [48, 49, 50, 51, 52, 53]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:flip_h")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
 }
 
 [sub_resource type="Animation" id="Animation_yny20"]
@@ -381,11 +436,22 @@ tracks/0/keys = {
 "update": 1,
 "values": [56, 57, 58, 59, 60, 61]
 }
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:flip_h")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
 
 [sub_resource type="Animation" id="Animation_8cpw0"]
 resource_name = "attack_left"
 length = 0.4
-loop_mode = 1
 step = 0.1
 tracks/0/type = "value"
 tracks/0/imported = false
@@ -411,11 +477,24 @@ tracks/1/keys = {
 "update": 1,
 "values": [112, 113, 114, 115]
 }
+tracks/2/type = "method"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath(".")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0.1),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"_on_attack_release"
+}]
+}
 
 [sub_resource type="Animation" id="Animation_ykcix"]
 resource_name = "attack_right"
 length = 0.4
-loop_mode = 1
 step = 0.1
 tracks/0/type = "value"
 tracks/0/imported = false
@@ -441,12 +520,25 @@ tracks/1/keys = {
 "update": 1,
 "values": [112, 113, 114, 115]
 }
+tracks/2/type = "method"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath(".")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0.1),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"_on_attack_release"
+}]
+}
 
 [sub_resource type="Animation" id="Animation_omsti"]
 resource_name = "attack_down"
 length = 0.4
-loop_mode = 1
-step = 0.1
+step = 0.05
 tracks/0/type = "value"
 tracks/0/imported = false
 tracks/0/enabled = true
@@ -459,11 +551,36 @@ tracks/0/keys = {
 "update": 1,
 "values": [96, 97, 98, 99]
 }
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:flip_h")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+tracks/2/type = "method"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath(".")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0.1),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"_on_attack_release"
+}]
+}
 
 [sub_resource type="Animation" id="Animation_1irux"]
 resource_name = "attack_up"
 length = 0.4
-loop_mode = 1
 step = 0.1
 tracks/0/type = "value"
 tracks/0/imported = false
@@ -476,6 +593,32 @@ tracks/0/keys = {
 "transitions": PackedFloat32Array(1, 1, 1, 1),
 "update": 1,
 "values": [104, 105, 106, 107]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("Sprite2D:flip_h")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 1,
+"values": [false]
+}
+tracks/2/type = "method"
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/path = NodePath(".")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/keys = {
+"times": PackedFloat32Array(0.1),
+"transitions": PackedFloat32Array(1),
+"values": [{
+"args": [],
+"method": &"_on_attack_release"
+}]
 }
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_fi36g"]
@@ -501,6 +644,7 @@ size = Vector2(17, 20)
 [node name="CharacterBody2D" type="CharacterBody2D"]
 collision_layer = 2
 script = SubResource("GDScript_e5t7k")
+arrow_scene = ExtResource("1_2p3op")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("1_yny20")
@@ -528,6 +672,17 @@ collision_mask = 8
 position = Vector2(-0.5, -3)
 shape = SubResource("RectangleShape2D_yny20")
 debug_color = Color(0.98203737, 0, 0.36992505, 0.41960785)
+
+[node name="ArrowSpawnUp" type="Marker2D" parent="."]
+position = Vector2(-2, -11)
+
+[node name="ArrowSpawnDown" type="Marker2D" parent="."]
+
+[node name="ArrowSpawnRight" type="Marker2D" parent="."]
+position = Vector2(5, -4)
+
+[node name="ArrowSpawnLeft" type="Marker2D" parent="."]
+position = Vector2(-6, -5)
 
 [connection signal="area_entered" from="InteractionArea" to="." method="_on_interaction_area_entered"]
 [connection signal="area_exited" from="InteractionArea" to="." method="_on_interaction_area_exited"]
