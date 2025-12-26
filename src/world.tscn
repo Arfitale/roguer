@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=4 uid="uid://k8pyvoxdx21e"]
+[gd_scene load_steps=6 format=4 uid="uid://k8pyvoxdx21e"]
 
 [ext_resource type="PackedScene" uid="uid://c07nqsvnx1fsb" path="res://src/character/character.tscn" id="1_tp5op"]
 [ext_resource type="PackedScene" uid="uid://n23uv4g8gm3r" path="res://src/tiles/base_tiles.tscn" id="2_xlegt"]
 [ext_resource type="PackedScene" uid="uid://d1aeqq8ekahvq" path="res://src/objects/basic_chest.tscn" id="3_0qwtu"]
 [ext_resource type="PackedScene" uid="uid://dvdqqxw3jq2rj" path="res://src/objects/table.tscn" id="3_t101k"]
+[ext_resource type="PackedScene" uid="uid://bka5ast3n1qoe" path="res://src/character/enemy/rat.tscn" id="5_36ipd"]
 
 [node name="World" type="Node2D"]
 
@@ -37,6 +38,9 @@ position = Vector2(96, 232)
 
 [node name="Table3" parent="." instance=ExtResource("3_t101k")]
 position = Vector2(80, 104)
+
+[node name="Rat" parent="." instance=ExtResource("5_36ipd")]
+position = Vector2(216, 8)
 
 [node name="CharacterBody2D" parent="." instance=ExtResource("1_tp5op")]
 position = Vector2(54.437138, -8.182526)
