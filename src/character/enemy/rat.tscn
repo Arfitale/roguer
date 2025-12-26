@@ -15,7 +15,7 @@ enum EnemyState {
 	DEAD
 }
 var state := EnemyState.IDLE
-var facing_direction := Vector2.UP
+var facing_direction := Vector2.DOWN
 
 # Node
 @onready var sprite := $Sprite2D
@@ -31,9 +31,7 @@ var knockback_velocity := Vector2.ZERO
 
 # Animation
 @onready var animation_player := $AnimationPlayer
-
-const speed = 300.0
-const jump_velocity = -400.0
+var current_animation := \"\"
 
 func _ready() -> void:
 	health = max_health
@@ -43,6 +41,7 @@ func _process(delta: float) -> void:
 
 func _physics_process(delta: float) -> void:
 	if state == EnemyState.HIT:
+		knockback_velocity = knockback_velocity.move_toward(Vector2.ZERO, 800 * delta)
 		velocity = knockback_velocity
 		move_and_slide()
 		return
@@ -56,10 +55,22 @@ func _handle_state():
 			_handle_wander_state()
 
 func _handle_idle_state():
-	animation_player.play(\"idle_down\")
+	_play_animation(_direction_to_anim(\"idle\", facing_direction))
 
 func _handle_wander_state():
 	pass
+
+func _play_animation(animation: String):
+	if animation == current_animation:
+		return
+	current_animation = animation
+	animation_player.play(animation)
+
+func _direction_to_anim(prefix: String, direction: Vector2):
+	if abs(direction.x) > abs(direction.y):
+		return prefix + (\"_right\" if direction.x > 0 else \"_left\")
+	else:
+		return prefix + (\"_down\" if direction.y > 0 else \"_up\")
 
 func take_damage(damage: int, hit_direction := Vector2.ZERO):
 	if state == EnemyState.DEAD: return

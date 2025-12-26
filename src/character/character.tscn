@@ -20,7 +20,7 @@ var state := CharacterState.IDLE
 # Movement
 @export var speed := 100.0
 var input_direction := Vector2.ZERO
-var facing_direction := Vector2.UP
+var facing_direction := Vector2.DOWN
 
 # Combat
 @export var arrow_scene: PackedScene
