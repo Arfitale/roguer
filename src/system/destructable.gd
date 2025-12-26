@@ -7,7 +7,7 @@ var health := 1
 func _ready():
 	health = max_health
 
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, direction: Vector2) -> void:
 	health -= amount
 	if health <= 0:
 		_on_destroyed()

@@ -11,14 +11,23 @@ enum EnemyState {
 	IDLE,
 	WANDER,
 	ATTACK,
+	HIT,
 	DEAD
 }
 var state := EnemyState.IDLE
 var facing_direction := Vector2.UP
 
-# Combat
+# Node
+@onready var sprite := $Sprite2D
+
+# Health
 @export var max_health := 2
 var health := max_health
+
+# Hit state
+@export var knockback_force := 50.0
+@export var hit_stun_time := 0.15
+var knockback_velocity := Vector2.ZERO
 
 # Animation
 @onready var animation_player := $AnimationPlayer
@@ -31,7 +40,13 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	_handle_state()
-	
+
+func _physics_process(delta: float) -> void:
+	if state == EnemyState.HIT:
+		velocity = knockback_velocity
+		move_and_slide()
+		return
+
 func _handle_state():
 	match state:
 		EnemyState.IDLE:
@@ -39,22 +54,37 @@ func _handle_state():
 		
 		EnemyState.WANDER:
 			_handle_wander_state()
-			
+
 func _handle_idle_state():
 	animation_player.play(\"idle_down\")
 
 func _handle_wander_state():
 	pass
 
-func take_damage(damage: int):
+func take_damage(damage: int, hit_direction := Vector2.ZERO):
 	if state == EnemyState.DEAD: return
 	health -= damage
 	if health <= 0:
 		_die()
+	else:
+		_enter_hit_state(hit_direction)
 
 func _die():
 	state = EnemyState.DEAD
 	queue_free()
+
+func _enter_hit_state(hit_direction: Vector2):
+	state = EnemyState.HIT
+	knockback_velocity = hit_direction.normalized() * knockback_force
+	_flash()
+	await get_tree().create_timer(hit_stun_time).timeout
+	if state != EnemyState.DEAD:
+		state = EnemyState.IDLE
+
+func _flash():
+	sprite.modulate = Color(1.0, 0.0, 0.0, 1.0)
+	await get_tree().create_timer(0.08).timeout
+	sprite.modulate = Color.WHITE
 "
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lwlmw"]
@@ -619,7 +649,7 @@ size = Vector2(12, 20)
 
 [node name="Rat" type="CharacterBody2D"]
 collision_layer = 4
-collision_mask = 16
+collision_mask = 17
 script = SubResource("GDScript_w7mfs")
 max_health = 3
 
