@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://bka5ast3n1qoe"]
+[gd_scene load_steps=13 format=3 uid="uid://bka5ast3n1qoe"]
 
 [ext_resource type="Texture2D" uid="uid://chvbdgnbbv5n7" path="res://assets/chars/enemy/rat.png" id="1_8gb1b"]
 
@@ -10,10 +10,15 @@ script/source = "extends CharacterBody2D
 enum EnemyState {
 	IDLE,
 	WANDER,
-	ATTACK
+	ATTACK,
+	DEAD
 }
 var state := EnemyState.IDLE
 var facing_direction := Vector2.UP
+
+# Combat
+@export var max_health := 2
+var health := max_health
 
 # Animation
 @onready var animation_player := $AnimationPlayer
@@ -21,7 +26,10 @@ var facing_direction := Vector2.UP
 const speed = 300.0
 const jump_velocity = -400.0
 
-func _physics_process(delta: float) -> void:
+func _ready() -> void:
+	health = max_health
+
+func _process(delta: float) -> void:
 	_handle_state()
 	
 func _handle_state():
@@ -37,6 +45,16 @@ func _handle_idle_state():
 
 func _handle_wander_state():
 	pass
+
+func take_damage(damage: int):
+	if state == EnemyState.DEAD: return
+	health -= damage
+	if health <= 0:
+		_die()
+
+func _die():
+	state = EnemyState.DEAD
+	queue_free()
 "
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lwlmw"]
@@ -90,7 +108,31 @@ tracks/3/keys = {
 "times": PackedFloat32Array(0),
 "transitions": PackedFloat32Array(1),
 "update": 0,
-"values": [Vector2(0, 1)]
+"values": [Vector2(-1, 1)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Hurtbox/CollisionShape2D:shape:size")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(12, 20)]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Hurtbox/CollisionShape2D:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(-1, -3)]
 }
 
 [sub_resource type="Animation" id="Animation_loje3"]
@@ -146,6 +188,30 @@ tracks/3/keys = {
 "update": 0,
 "values": [Vector2(-1, 0)]
 }
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Hurtbox/CollisionShape2D:shape:size")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(12, 20)]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Hurtbox/CollisionShape2D:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(-1, -3)]
+}
 
 [sub_resource type="Animation" id="Animation_w7mfs"]
 resource_name = "idle_left"
@@ -199,6 +265,30 @@ tracks/3/keys = {
 "transitions": PackedFloat32Array(1),
 "update": 0,
 "values": [Vector2(2, 1)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Hurtbox/CollisionShape2D:shape:size")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(22, 9)]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Hurtbox/CollisionShape2D:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(5, 0.5)]
 }
 
 [sub_resource type="Animation" id="Animation_lwlmw"]
@@ -254,6 +344,30 @@ tracks/3/keys = {
 "update": 0,
 "values": [Vector2(8, 4)]
 }
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Hurtbox/CollisionShape2D:shape:size")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(22, 9.5)]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Hurtbox/CollisionShape2D:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(-5, 0.25)]
+}
 
 [sub_resource type="Animation" id="Animation_8gb1b"]
 resource_name = "idle_up"
@@ -307,6 +421,30 @@ tracks/3/keys = {
 "transitions": PackedFloat32Array(1),
 "update": 0,
 "values": [Vector2(6, 8)]
+}
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Hurtbox/CollisionShape2D:shape:size")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(12, 20)]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Hurtbox/CollisionShape2D:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 2)]
 }
 
 [sub_resource type="Animation" id="Animation_gawko"]
@@ -362,6 +500,30 @@ tracks/3/keys = {
 "update": 0,
 "values": [Vector2(-1, 0.5)]
 }
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Hurtbox/CollisionShape2D:shape:size")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(12, 20)]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Hurtbox/CollisionShape2D:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(-1, -3)]
+}
 
 [sub_resource type="Animation" id="Animation_7i57y"]
 resource_name = "move_up"
@@ -416,6 +578,30 @@ tracks/3/keys = {
 "update": 0,
 "values": [Vector2(0, 0.25)]
 }
+tracks/4/type = "value"
+tracks/4/imported = false
+tracks/4/enabled = true
+tracks/4/path = NodePath("Hurtbox/CollisionShape2D:shape:size")
+tracks/4/interp = 1
+tracks/4/loop_wrap = true
+tracks/4/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(12, 20)]
+}
+tracks/5/type = "value"
+tracks/5/imported = false
+tracks/5/enabled = true
+tracks/5/path = NodePath("Hurtbox/CollisionShape2D:position")
+tracks/5/interp = 1
+tracks/5/loop_wrap = true
+tracks/5/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector2(0, 2)]
+}
 
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_gawko"]
 _data = {
@@ -428,8 +614,14 @@ _data = {
 &"move_up": SubResource("Animation_7i57y")
 }
 
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_8gb1b"]
+size = Vector2(12, 20)
+
 [node name="Rat" type="CharacterBody2D"]
+collision_layer = 4
+collision_mask = 16
 script = SubResource("GDScript_w7mfs")
+max_health = 3
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 texture = ExtResource("1_8gb1b")
@@ -437,10 +629,19 @@ hframes = 8
 vframes = 15
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2(0, 1)
+position = Vector2(-1, 1)
 shape = SubResource("RectangleShape2D_lwlmw")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 libraries = {
 &"": SubResource("AnimationLibrary_gawko")
 }
+
+[node name="Hurtbox" type="Area2D" parent="."]
+collision_layer = 32
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hurtbox"]
+position = Vector2(-1, -3)
+shape = SubResource("RectangleShape2D_8gb1b")
+debug_color = Color(0.9669991, 1.4439225e-06, 0.4800226, 0.41960785)

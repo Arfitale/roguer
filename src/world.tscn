@@ -42,5 +42,11 @@ position = Vector2(80, 104)
 [node name="Rat" parent="." instance=ExtResource("5_36ipd")]
 position = Vector2(216, 8)
 
+[node name="Rat2" parent="." instance=ExtResource("5_36ipd")]
+position = Vector2(104, 128)
+
+[node name="Rat3" parent="." instance=ExtResource("5_36ipd")]
+position = Vector2(-24, 216)
+
 [node name="CharacterBody2D" parent="." instance=ExtResource("1_tp5op")]
 position = Vector2(54.437138, -8.182526)
