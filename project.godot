@@ -15,7 +15,7 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="roguer"
-run/main_scene="uid://k8pyvoxdx21e"
+run/main_scene="uid://dow415ql2h3kr"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://icon.svg"
 
