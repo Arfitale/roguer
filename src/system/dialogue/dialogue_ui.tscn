@@ -7,32 +7,67 @@ resource_name = "dialogue_ui"
 script/source = "class_name DialogueUI
 extends CanvasLayer
 
+signal start_dialogue(messages: Dictionary)
+signal next_dialogue
+signal finished
+
 @onready var speaker_name_ui := %SpeakerName
 @onready var content_ui := %Content
 @onready var dialogue_sfx := %DialogueTypeSfx
 
 @export var typing_speed: float = 20.0
+
+enum DialogueState {
+	IDLE,
+	SHOWING_TEXT,
+	WAITING_INPUT,
+	FINISHED
+}
+
+var dialogue_state: DialogueState = DialogueState.IDLE
+var current_messages: Dictionary
+var current_message: Dictionary
+
 var time_accumulated: float = 0.0
 var is_typing_active: bool = false
 var is_playing_dialogue_sfx: bool = false
 
-var message = {
-	\"speaker\": \"player\",
-	\"text\": \"Hello to Godot Engine!\",
+var messages = {
+	\"start\": {
+		\"speaker\": \"NPC\",
+		\"text\": \"Hello there!\",
+		\"next\": \"end\"
+	},
+	\"end\": {
+		\"speaker\": \"Me\",
+		\"text\": \"Hello NPC!\",
+	},
 }
 
 func _process(delta: float) -> void:
-	if is_typing_active:
-		_typing_message(delta)
-		
-	if Input.is_action_just_pressed(\"test_feature\"):
-		_update_message(_from_dictionary(message))
+	match dialogue_state:
+		DialogueState.IDLE:
+			visible = false
+			if Input.is_action_just_pressed(\"test_feature\"):
+				start_dialogue.emit(messages)
+		DialogueState.SHOWING_TEXT:
+			if is_typing_active:
+				_typing_message(delta)
+		DialogueState.WAITING_INPUT:
+			if Input.is_action_just_pressed(\"ui_accept\"):
+				if current_message.has(\"next\"):
+					next_dialogue.emit()
+				else:
+					dialogue_state = DialogueState.FINISHED
+		DialogueState.FINISHED:
+			visible = false
+			dialogue_state = DialogueState.IDLE
 
 func _update_message(new_message: DialogueNode) -> void:
+	dialogue_state = DialogueState.SHOWING_TEXT
 	speaker_name_ui.text = new_message.speaker
 	content_ui.bbcode_text = new_message.text
 	content_ui.visible_characters = 0
-	#type_timer.start()
 	is_typing_active = true
 	is_playing_dialogue_sfx = true
 	dialogue_sfx.play(0)
@@ -45,6 +80,7 @@ func _typing_message(delta: float) -> void:
 		time_accumulated = 0.0
 		is_typing_active = false
 		is_playing_dialogue_sfx = false
+		dialogue_state = DialogueState.WAITING_INPUT
 
 func _from_dictionary(data: Dictionary) -> DialogueNode:
 	var node = DialogueNode.new()
@@ -56,6 +92,16 @@ func _from_dictionary(data: Dictionary) -> DialogueNode:
 func _on_dialogue_type_sfx_finished() -> void:
 	if is_playing_dialogue_sfx:
 		dialogue_sfx.play(0)
+
+func _on_start_dialogue(messages: Dictionary) -> void:
+	visible = true
+	current_messages = messages
+	current_message = current_messages[\"start\"]
+	_update_message(_from_dictionary(current_message))
+
+func _on_next_dialogue() -> void:
+	current_message = current_messages[current_message[\"next\"]]
+	_update_message(_from_dictionary(current_message))
 "
 
 [node name="DialogueUi" type="CanvasLayer" unique_id=931019690]
@@ -100,4 +146,6 @@ text = "test"
 unique_name_in_owner = true
 stream = ExtResource("1_rgciv")
 
+[connection signal="next_dialogue" from="." to="." method="_on_next_dialogue"]
+[connection signal="start_dialogue" from="." to="." method="_on_start_dialogue"]
 [connection signal="finished" from="DialogueTypeSfx" to="." method="_on_dialogue_type_sfx_finished"]
