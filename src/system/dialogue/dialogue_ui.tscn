@@ -1,0 +1,103 @@
+[gd_scene format=3 uid="uid://du56gj8m04ia5"]
+
+[ext_resource type="AudioStream" uid="uid://b5yr8oikqkfu1" path="res://assets/sfx/blop.wav" id="1_rgciv"]
+
+[sub_resource type="GDScript" id="GDScript_pgktn"]
+resource_name = "dialogue_ui"
+script/source = "class_name DialogueUI
+extends CanvasLayer
+
+@onready var speaker_name_ui := %SpeakerName
+@onready var content_ui := %Content
+@onready var dialogue_sfx := %DialogueTypeSfx
+
+@export var typing_speed: float = 20.0
+var time_accumulated: float = 0.0
+var is_typing_active: bool = false
+var is_playing_dialogue_sfx: bool = false
+
+var message = {
+	\"speaker\": \"player\",
+	\"text\": \"Hello to Godot Engine!\",
+}
+
+func _process(delta: float) -> void:
+	if is_typing_active:
+		_typing_message(delta)
+		
+	if Input.is_action_just_pressed(\"test_feature\"):
+		_update_message(_from_dictionary(message))
+
+func _update_message(new_message: DialogueNode) -> void:
+	speaker_name_ui.text = new_message.speaker
+	content_ui.bbcode_text = new_message.text
+	content_ui.visible_characters = 0
+	#type_timer.start()
+	is_typing_active = true
+	is_playing_dialogue_sfx = true
+	dialogue_sfx.play(0)
+
+func _typing_message(delta: float) -> void:
+	time_accumulated += delta
+	if content_ui.visible_characters < content_ui.text.length():
+		content_ui.visible_characters = int(time_accumulated * typing_speed)
+	else:
+		time_accumulated = 0.0
+		is_typing_active = false
+		is_playing_dialogue_sfx = false
+
+func _from_dictionary(data: Dictionary) -> DialogueNode:
+	var node = DialogueNode.new()
+	node.speaker = data.get(\"speaker\", \"\")
+	node.text = data.get(\"text\", \"\")
+	node.next = data.get(\"next\", \"\")
+	return node
+
+func _on_dialogue_type_sfx_finished() -> void:
+	if is_playing_dialogue_sfx:
+		dialogue_sfx.play(0)
+"
+
+[node name="DialogueUi" type="CanvasLayer" unique_id=931019690]
+script = SubResource("GDScript_pgktn")
+
+[node name="Panel" type="Panel" parent="." unique_id=1649352454]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -144.0
+offset_top = -60.0
+offset_right = 144.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 0
+size_flags_vertical = 8
+
+[node name="SpeakerName" type="Label" parent="Panel" unique_id=88213174]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 40.0
+offset_bottom = 20.0
+theme_override_font_sizes/font_size = 8
+text = "Speaker"
+
+[node name="Content" type="RichTextLabel" parent="Panel" unique_id=1137671258]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 8.0
+offset_top = 24.0
+offset_right = 312.0
+offset_bottom = 64.0
+theme_override_colors/default_color = Color(0.8474744, 0.84747446, 0.84747446, 1)
+theme_override_font_sizes/normal_font_size = 6
+text = "test"
+
+[node name="DialogueTypeSfx" type="AudioStreamPlayer" parent="." unique_id=2136128299]
+unique_name_in_owner = true
+stream = ExtResource("1_rgciv")
+
+[connection signal="finished" from="DialogueTypeSfx" to="." method="_on_dialogue_type_sfx_finished"]

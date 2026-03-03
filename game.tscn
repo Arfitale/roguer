@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://g5krk6dvqegq"]
+
+[ext_resource type="PackedScene" uid="uid://k8pyvoxdx21e" path="res://src/world.tscn" id="1_e2o6t"]
+[ext_resource type="PackedScene" uid="uid://du56gj8m04ia5" path="res://src/system/dialogue/dialogue_ui.tscn" id="2_feb5d"]
+
+[node name="Game" type="Node2D" unique_id=452736810]
+
+[node name="World" parent="." unique_id=2091352509 instance=ExtResource("1_e2o6t")]
+
+[node name="DialogueUi" parent="." unique_id=931019690 instance=ExtResource("2_feb5d")]
