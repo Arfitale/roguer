@@ -7,9 +7,8 @@ resource_name = "dialogue_ui"
 script/source = "class_name DialogueUI
 extends CanvasLayer
 
-signal start_dialogue(messages: Dictionary)
-signal next_dialogue
-signal finished
+signal typing_finished
+signal skip_requested
 
 @onready var speaker_name_ui := %SpeakerName
 @onready var content_ui := %Content
@@ -17,54 +16,29 @@ signal finished
 
 @export var typing_speed: float = 20.0
 
-enum DialogueState {
-	IDLE,
-	SHOWING_TEXT,
-	WAITING_INPUT,
-	FINISHED
-}
-
-var dialogue_state: DialogueState = DialogueState.IDLE
-var current_messages: Dictionary
-var current_message: Dictionary
-
 var time_accumulated: float = 0.0
 var is_typing_active: bool = false
 var is_playing_dialogue_sfx: bool = false
 
-var messages = {
-	\"start\": {
-		\"speaker\": \"NPC\",
-		\"text\": \"Hello there!\",
-		\"next\": \"end\"
-	},
-	\"end\": {
-		\"speaker\": \"Me\",
-		\"text\": \"Hello NPC!\",
-	},
-}
+func _ready() -> void:
+	visible = false
 
 func _process(delta: float) -> void:
-	match dialogue_state:
-		DialogueState.IDLE:
-			visible = false
-			if Input.is_action_just_pressed(\"test_feature\"):
-				start_dialogue.emit(messages)
-		DialogueState.SHOWING_TEXT:
-			if is_typing_active:
-				_typing_message(delta)
-		DialogueState.WAITING_INPUT:
-			if Input.is_action_just_pressed(\"ui_accept\"):
-				if current_message.has(\"next\"):
-					next_dialogue.emit()
-				else:
-					dialogue_state = DialogueState.FINISHED
-		DialogueState.FINISHED:
-			visible = false
-			dialogue_state = DialogueState.IDLE
+	if is_typing_active:
+		_typing_message(delta)
+
+func _typing_message(delta: float) -> void:
+	time_accumulated += delta
+	if content_ui.visible_characters < content_ui.get_total_character_count():
+		content_ui.visible_characters = int(time_accumulated * typing_speed)
+	else:
+		typing_finished.emit()
+
+func _on_dialogue_type_sfx_finished() -> void:
+	if is_playing_dialogue_sfx:
+		dialogue_sfx.play(0)
 
 func _update_message(new_message: DialogueNode) -> void:
-	dialogue_state = DialogueState.SHOWING_TEXT
 	speaker_name_ui.text = new_message.speaker
 	content_ui.bbcode_text = new_message.text
 	content_ui.visible_characters = 0
@@ -72,36 +46,17 @@ func _update_message(new_message: DialogueNode) -> void:
 	is_playing_dialogue_sfx = true
 	dialogue_sfx.play(0)
 
-func _typing_message(delta: float) -> void:
-	time_accumulated += delta
-	if content_ui.visible_characters < content_ui.text.length():
-		content_ui.visible_characters = int(time_accumulated * typing_speed)
-	else:
-		time_accumulated = 0.0
-		is_typing_active = false
-		is_playing_dialogue_sfx = false
-		dialogue_state = DialogueState.WAITING_INPUT
+func _on_typing_finished() -> void:
+	time_accumulated = 0.0
+	is_typing_active = false
+	is_playing_dialogue_sfx = false
 
-func _from_dictionary(data: Dictionary) -> DialogueNode:
-	var node = DialogueNode.new()
-	node.speaker = data.get(\"speaker\", \"\")
-	node.text = data.get(\"text\", \"\")
-	node.next = data.get(\"next\", \"\")
-	return node
+func _on_skip_requested() -> void:
+	content_ui.visible_characters = content_ui.get_total_character_count()
+	typing_finished.emit()
 
-func _on_dialogue_type_sfx_finished() -> void:
-	if is_playing_dialogue_sfx:
-		dialogue_sfx.play(0)
-
-func _on_start_dialogue(messages: Dictionary) -> void:
-	visible = true
-	current_messages = messages
-	current_message = current_messages[\"start\"]
-	_update_message(_from_dictionary(current_message))
-
-func _on_next_dialogue() -> void:
-	current_message = current_messages[current_message[\"next\"]]
-	_update_message(_from_dictionary(current_message))
+func _on_dialogue_manager_node_changed(next_node: DialogueNode) -> void:
+	_update_message(next_node)
 "
 
 [node name="DialogueUi" type="CanvasLayer" unique_id=931019690]
@@ -146,6 +101,6 @@ text = "test"
 unique_name_in_owner = true
 stream = ExtResource("1_rgciv")
 
-[connection signal="next_dialogue" from="." to="." method="_on_next_dialogue"]
-[connection signal="start_dialogue" from="." to="." method="_on_start_dialogue"]
+[connection signal="skip_requested" from="." to="." method="_on_skip_requested"]
+[connection signal="typing_finished" from="." to="." method="_on_typing_finished"]
 [connection signal="finished" from="DialogueTypeSfx" to="." method="_on_dialogue_type_sfx_finished"]

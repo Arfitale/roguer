@@ -1,0 +1,97 @@
+[gd_scene format=3 uid="uid://btif4uq0sujjk"]
+
+[ext_resource type="PackedScene" uid="uid://du56gj8m04ia5" path="res://src/system/dialogue/dialogue_ui.tscn" id="1_qwwnv"]
+
+[sub_resource type="GDScript" id="GDScript_4jmj1"]
+resource_name = "DialogueManager"
+script/source = "class_name DialogueManager
+extends Node
+
+signal dialogue_started(messages: Dictionary)
+signal node_changed(next_node: DialogueNode)
+signal dialogue_ended
+
+enum DialogueState {
+	IDLE,
+	SHOWING_TEXT,
+	WAITING_INPUT,
+}
+
+@onready var dialogueUI = %DialogueUi
+
+var dialogue_state: DialogueState = DialogueState.IDLE
+var dialogue_graph: Dictionary
+var active_node: DialogueNode
+
+var messages = {
+	\"start\": {
+		\"speaker\": \"NPC\",
+		\"text\": \"Hello there!\",
+		\"next\": \"end\"
+	},
+	\"end\": {
+		\"speaker\": \"Me\",
+		\"text\": \"Currently if player presses ui_accept during typing, nothing happens.\",
+	},
+}
+
+func _unhandled_input(event: InputEvent) -> void:
+	match dialogue_state:
+		DialogueState.IDLE:
+			if Input.is_action_just_pressed(\"test_feature\"):
+				dialogue_started.emit(messages)
+		DialogueState.WAITING_INPUT:
+			if Input.is_action_just_pressed(\"ui_accept\"):
+				if active_node.next:
+					var next_node = _dictionary_to_dialogue_node(dialogue_graph[active_node.next])
+					node_changed.emit(next_node)
+				else:
+					dialogue_ended.emit()
+		DialogueState.SHOWING_TEXT:
+			if Input.is_action_just_pressed(\"ui_accept\"):
+				dialogueUI.skip_requested.emit()
+
+func _dictionary_to_dialogue_node(data: Dictionary) -> DialogueNode:
+	var node = DialogueNode.new()
+	node.speaker = data.get(\"speaker\", \"\")
+	node.text = data.get(\"text\", \"\")
+	node.next = data.get(\"next\", \"\")
+	return node
+
+func _on_dialogue_started(messages: Dictionary) -> void:
+	dialogue_graph = messages
+	
+	if not dialogue_graph.has(\"start\"):
+		return
+	
+	active_node = _dictionary_to_dialogue_node(dialogue_graph.get(\"start\"))
+	node_changed.emit(active_node)
+	dialogueUI.visible = true
+	dialogue_state = DialogueState.SHOWING_TEXT
+
+func _on_node_changed(next: DialogueNode) -> void:
+	active_node = next
+	dialogue_state = DialogueState.SHOWING_TEXT
+
+func _on_dialogue_ended() -> void:
+	active_node = null
+	dialogue_graph = {}
+	dialogue_state = DialogueState.IDLE
+	dialogueUI.visible = false
+
+func _on_dialogue_ui_typing_finished() -> void:
+	dialogue_state = DialogueState.WAITING_INPUT
+"
+
+[node name="DialogueManager" type="Node2D" unique_id=1244048051]
+script = SubResource("GDScript_4jmj1")
+
+[node name="DialogueUi" parent="." unique_id=931019690 instance=ExtResource("1_qwwnv")]
+unique_name_in_owner = true
+
+[connection signal="dialogue_ended" from="." to="." method="_on_dialogue_ended"]
+[connection signal="dialogue_started" from="." to="." method="_on_dialogue_started"]
+[connection signal="dialogue_started" from="." to="DialogueUi" method="_on_dialogue_manager_dialogue_started"]
+[connection signal="node_changed" from="." to="." method="_on_node_changed"]
+[connection signal="node_changed" from="." to="DialogueUi" method="_on_dialogue_manager_node_changed"]
+[connection signal="typing_finished" from="DialogueUi" to="." method="_on_dialogue_ui_typing_finished"]
