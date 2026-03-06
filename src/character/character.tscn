@@ -1,4 +1,4 @@
-[gd_scene load_steps=20 format=3 uid="uid://c07nqsvnx1fsb"]
+[gd_scene format=3 uid="uid://c07nqsvnx1fsb"]
 
 [ext_resource type="PackedScene" uid="uid://ccgchljolgao5" path="res://src/weapon/arrow.tscn" id="1_2p3op"]
 [ext_resource type="Texture2D" uid="uid://yiab7nlpmq2u" path="res://assets/chars/robin/1.png" id="1_yny20"]
@@ -12,7 +12,8 @@ enum CharacterState {
 	IDLE,
 	MOVE, 
 	INTERACT, 
-	ATTACK
+	ATTACK,
+	DIALOGUE
 }
 
 var state := CharacterState.IDLE
@@ -47,7 +48,7 @@ func _process(delta: float):
 	_update_animation()
 
 func _physics_process(delta: float):
-	if state == CharacterState.INTERACT or state == CharacterState.ATTACK:
+	if state == CharacterState.INTERACT or state == CharacterState.ATTACK or state == CharacterState.DIALOGUE:
 		return
 	_handle_movement()
 
@@ -62,6 +63,9 @@ func _handle_state_logic():
 			pass
 		
 		CharacterState.ATTACK:
+			pass
+		
+		CharacterState.DIALOGUE:
 			pass
 
 func _check_movement_input():
@@ -87,6 +91,9 @@ func _update_animation():
 			_play_move_animation(facing_direction)
 
 		CharacterState.INTERACT:
+			_play_idle_animation(facing_direction)
+		
+		CharacterState.DIALOGUE:
 			_play_idle_animation(facing_direction)
 
 func _handle_movement():
@@ -185,6 +192,12 @@ func _on_interaction_area_entered(area: Area2D) -> void:
 func _on_interaction_area_exited(area: Area2D) -> void:
 	if area is Interactable:
 		interactables.erase(area)
+
+func _on_dialogue_manager_dialogue_started(messages: Dictionary) -> void:
+	state = CharacterState.DIALOGUE
+
+func _on_dialogue_manager_dialogue_ended() -> void:
+	state = CharacterState.IDLE
 "
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qdbtw"]
@@ -649,47 +662,45 @@ _data = {
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_yny20"]
 size = Vector2(17, 20)
 
-[node name="CharacterBody2D" type="CharacterBody2D" groups=["player"]]
+[node name="Player" type="CharacterBody2D" unique_id=1830247795 groups=["player"]]
 collision_layer = 2
 script = SubResource("GDScript_e5t7k")
 arrow_scene = ExtResource("1_2p3op")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=338028743]
 texture = ExtResource("1_yny20")
 flip_h = true
 hframes = 8
 vframes = 15
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2063484729]
 position = Vector2(1, -1)
 shape = SubResource("RectangleShape2D_qdbtw")
 
-[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-libraries = {
-&"": SubResource("AnimationLibrary_fi36g")
-}
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1015010344]
+libraries/ = SubResource("AnimationLibrary_fi36g")
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="Camera2D" type="Camera2D" parent="." unique_id=2119335078]
 position_smoothing_enabled = true
 
-[node name="InteractionArea" type="Area2D" parent="."]
+[node name="InteractionArea" type="Area2D" parent="." unique_id=652683717]
 collision_layer = 2
 collision_mask = 8
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=1135016240]
 position = Vector2(-0.5, -3)
 shape = SubResource("RectangleShape2D_yny20")
 debug_color = Color(0.98203737, 0, 0.36992505, 0.41960785)
 
-[node name="ArrowSpawnUp" type="Marker2D" parent="."]
+[node name="ArrowSpawnUp" type="Marker2D" parent="." unique_id=704101140]
 position = Vector2(-2, -11)
 
-[node name="ArrowSpawnDown" type="Marker2D" parent="."]
+[node name="ArrowSpawnDown" type="Marker2D" parent="." unique_id=1737818383]
 
-[node name="ArrowSpawnRight" type="Marker2D" parent="."]
+[node name="ArrowSpawnRight" type="Marker2D" parent="." unique_id=713445820]
 position = Vector2(5, -4)
 
-[node name="ArrowSpawnLeft" type="Marker2D" parent="."]
+[node name="ArrowSpawnLeft" type="Marker2D" parent="." unique_id=653423421]
 position = Vector2(-6, -5)
 
 [connection signal="area_entered" from="InteractionArea" to="." method="_on_interaction_area_entered"]

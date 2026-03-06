@@ -9,12 +9,14 @@ extends Node
 
 signal dialogue_started(messages: Dictionary)
 signal node_changed(next_node: DialogueNode)
+signal choices_requested(choices: Array)
 signal dialogue_ended
 
 enum DialogueState {
 	IDLE,
 	SHOWING_TEXT,
 	WAITING_INPUT,
+	CHOICE_SELECTION
 }
 
 @onready var dialogueUI = %DialogueUi
@@ -22,17 +24,33 @@ enum DialogueState {
 var dialogue_state: DialogueState = DialogueState.IDLE
 var dialogue_graph: Dictionary
 var active_node: DialogueNode
+var active_choices: Array
 
 var messages = {
 	\"start\": {
 		\"speaker\": \"NPC\",
-		\"text\": \"Hello there!\",
-		\"next\": \"end\"
+		\"text\": \"What do you want to do?\",
+		\"choices\": [
+			{
+				\"text\": \"Who are you?\",
+				\"next\": \"who\"
+			},
+			{
+				\"text\": \"Goodbye.\",
+				\"next\": \"bye\"
+			}
+		]
 	},
-	\"end\": {
-		\"speaker\": \"Me\",
-		\"text\": \"Currently if player presses ui_accept during typing, nothing happens.\",
+
+	\"who\": {
+		\"speaker\": \"NPC\",
+		\"text\": \"I am the village guard.\",
 	},
+
+	\"bye\": {
+		\"speaker\": \"NPC\",
+		\"text\": \"Farewell traveler.\"
+	}
 }
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -50,14 +68,17 @@ func _unhandled_input(event: InputEvent) -> void:
 		DialogueState.SHOWING_TEXT:
 			if Input.is_action_just_pressed(\"ui_accept\"):
 				dialogueUI.skip_requested.emit()
+		DialogueState.CHOICE_SELECTION:
+			pass
 
 func _dictionary_to_dialogue_node(data: Dictionary) -> DialogueNode:
 	var node = DialogueNode.new()
 	node.speaker = data.get(\"speaker\", \"\")
 	node.text = data.get(\"text\", \"\")
 	node.next = data.get(\"next\", \"\")
+	node.choices = data.get(\"choices\", [])
 	return node
-
+ 
 func _on_dialogue_started(messages: Dictionary) -> void:
 	dialogue_graph = messages
 	
@@ -80,7 +101,16 @@ func _on_dialogue_ended() -> void:
 	dialogueUI.visible = false
 
 func _on_dialogue_ui_typing_finished() -> void:
-	dialogue_state = DialogueState.WAITING_INPUT
+	if active_node.choices.size() > 0:
+		active_choices = active_node.choices
+		choices_requested.emit(active_node.choices)
+		dialogue_state = DialogueState.CHOICE_SELECTION
+	else:
+		dialogue_state = DialogueState.WAITING_INPUT
+
+func _on_dialogue_ui_choice_selected(choice_index: int) -> void:
+	var selected_choice_node: Dictionary = active_choices[choice_index]
+	node_changed.emit(_dictionary_to_dialogue_node(dialogue_graph[selected_choice_node.next]))
 "
 
 [node name="DialogueManager" type="Node2D" unique_id=1244048051]
@@ -89,9 +119,11 @@ script = SubResource("GDScript_4jmj1")
 [node name="DialogueUi" parent="." unique_id=931019690 instance=ExtResource("1_qwwnv")]
 unique_name_in_owner = true
 
+[connection signal="choices_requested" from="." to="DialogueUi" method="_on_dialogue_manager_choices_requested"]
 [connection signal="dialogue_ended" from="." to="." method="_on_dialogue_ended"]
 [connection signal="dialogue_started" from="." to="." method="_on_dialogue_started"]
 [connection signal="dialogue_started" from="." to="DialogueUi" method="_on_dialogue_manager_dialogue_started"]
 [connection signal="node_changed" from="." to="." method="_on_node_changed"]
 [connection signal="node_changed" from="." to="DialogueUi" method="_on_dialogue_manager_node_changed"]
+[connection signal="choice_selected" from="DialogueUi" to="." method="_on_dialogue_ui_choice_selected"]
 [connection signal="typing_finished" from="DialogueUi" to="." method="_on_dialogue_ui_typing_finished"]

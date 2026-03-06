@@ -57,5 +57,5 @@ position = Vector2(224, 168)
 [node name="Rat6" parent="." unique_id=1275239065 instance=ExtResource("5_36ipd")]
 position = Vector2(208, 272)
 
-[node name="CharacterBody2D" parent="." unique_id=1029270025 instance=ExtResource("1_tp5op")]
+[node name="Player" parent="." unique_id=1029270025 instance=ExtResource("1_tp5op")]
 position = Vector2(54.437138, -8.182526)

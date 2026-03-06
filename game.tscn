@@ -3,8 +3,22 @@
 [ext_resource type="PackedScene" uid="uid://k8pyvoxdx21e" path="res://src/world.tscn" id="1_e2o6t"]
 [ext_resource type="PackedScene" uid="uid://btif4uq0sujjk" path="res://src/system/dialogue/DialogueManager.tscn" id="2_e2o6t"]
 
+[sub_resource type="GDScript" id="GDScript_e2o6t"]
+resource_name = "game"
+script/source = "extends Node2D
+
+@onready var world = $World
+"
+
 [node name="Game" type="Node2D" unique_id=452736810]
+script = SubResource("GDScript_e2o6t")
 
 [node name="World" parent="." unique_id=2091352509 instance=ExtResource("1_e2o6t")]
 
 [node name="DialogueManager" parent="." unique_id=1244048051 instance=ExtResource("2_e2o6t")]
+
+[connection signal="dialogue_ended" from="DialogueManager" to="." method="_on_dialogue_manager_dialogue_ended"]
+[connection signal="dialogue_ended" from="DialogueManager" to="World/Player" method="_on_dialogue_manager_dialogue_ended"]
+[connection signal="dialogue_started" from="DialogueManager" to="World/Player" method="_on_dialogue_manager_dialogue_started"]
+
+[editable path="World"]

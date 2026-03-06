@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://cl6t0mgeh88oj"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_2i3ck"]
+
+[node name="Button" type="Button" unique_id=1896890974]
+offset_right = 8.0
+offset_bottom = 8.0
+theme_override_colors/font_focus_color = Color(0, 0.9490196, 0.9490196, 1)
+theme_override_font_sizes/font_size = 4
+theme_override_styles/focus = SubResource("StyleBoxEmpty_2i3ck")
+text = "test"
