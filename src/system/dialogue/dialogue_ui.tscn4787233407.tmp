@@ -10,7 +10,6 @@ extends CanvasLayer
 signal typing_finished
 signal skip_requested
 signal choice_selected(choice_index: int)
-signal pause_finished
 
 @onready var speakerNameUi := %SpeakerName
 @onready var contentUi := %Content
@@ -19,57 +18,58 @@ signal pause_finished
 
 var ButtonUI = preload(\"res://src/ui/button.tscn\")
 
-@export var typing_speed: float = 0.5
 
-var is_typing: bool = false
+@export var typing_speed: float = 20.0
+
+var time_accumulated: float = 0.0
+var is_typing_active: bool = false
 var is_playing_dialogue_sfx: bool = false
-var skip_requested_flag: bool = false
-var current_message
-
-var _pause_regex := RegEx.new()
+var is_playing_dialogue: bool = false
 
 func _ready() -> void:
-	_pause_regex.compile(\"\\\\[pause=(\\\\d+(?:\\\\.\\\\d+)?)\\\\]\")
 	visible = false
 
-func _typing_text(text: String) -> void:
-	is_typing = true
-	_play_dialogue_sfx()
-	dialogueSfx.play(0)
-	
-	for char in text:
-		if skip_requested_flag:
-			is_typing = false
-			_stop_dialogue_sfx()
-			return
-			
-		contentUi.text += char
-		await get_tree().create_timer(typing_speed, true).timeout
+func _process(delta: float) -> void:
+	if is_typing_active:
+		_typing_message(delta)
+
+func _typing_message(delta: float) -> void:
+	time_accumulated += delta
+	if contentUi.visible_characters < contentUi.get_total_character_count():
+		contentUi.visible_characters = int(time_accumulated * typing_speed)
+	else:
+		is_typing_active = false
 		
-	is_typing = false
-	_stop_dialogue_sfx()
+	if not is_playing_dialogue and not is_typing_active:
+		typing_finished.emit()
 
-func _execute_pause(duration: float)-> void:
-	var timer := get_tree().create_timer(duration)
-	
-	timer.timeout.connect(func(): pause_finished.emit())
-	skip_requested.connect(func(): pause_finished.emit(), CONNECT_ONE_SHOT)
-	
-	await pause_finished
-
-func get_removed_tags_text(text: String) -> String:
-	return _pause_regex.sub(text, \"\", true)
+func _on_dialogue_type_sfx_finished() -> void:
+	if is_playing_dialogue_sfx:
+		dialogueSfx.play(0)
 
 func _update_message(new_message: DialogueNode) -> void:
-	current_message = new_message
-	current_message.text = get_removed_tags_text(current_message.text)
 	speakerNameUi.text = new_message.speaker
+	#contentUi.bbcode_text = new_message.text
+	#contentUi.visible_characters = 0
+	#is_typing_active = true
+	#is_playing_dialogue_sfx = true
+	#dialogueSfx.play(0)
+
+func _update_message_text(text: String):
+	var previous_length = contentUi.get_total_character_count()
+	var previous_text = contentUi.text
+	contentUi.bbcode_text = previous_text + text 
+	contentUi.visible_characters = previous_length
+	time_accumulated = 0.0
+	is_typing_active = true
+	is_playing_dialogue_sfx = true
+	dialogueSfx.play(0)
 
 func _show_choices(choices: Array):
 	choicesContainer.show()
 	
 	_remove_choices()	
-	for index in range(choices.size()):
+	for index in choices.size():
 		var button = ButtonUI.instantiate()
 		button.text = choices[index][\"text\"]
 		button.pressed.connect(func():
@@ -83,23 +83,14 @@ func _remove_choices():
 	for child in choicesContainer.get_children():
 		child.queue_free()
 
-func _play_dialogue_sfx() -> void:
-	is_playing_dialogue_sfx = true
-
-func _stop_dialogue_sfx() -> void:
+func _on_typing_finished() -> void:
+	time_accumulated = 0.0
+	is_typing_active = false
 	is_playing_dialogue_sfx = false
 
-func _on_dialogue_type_sfx_finished() -> void:
-	if is_playing_dialogue_sfx:
-		dialogueSfx.play(0)
-
-func _on_typing_finished() -> void:
-	is_typing = false
-	_stop_dialogue_sfx()
-
 func _on_skip_requested() -> void:
-	contentUi.text = current_message.text
-	skip_requested_flag = true
+	contentUi.visible_characters = contentUi.get_total_character_count()
+	typing_finished.emit()
 
 func _on_dialogue_manager_node_changed(next_node: DialogueNode) -> void:
 	_update_message(next_node)
@@ -112,23 +103,16 @@ func _on_choice_selected(choice_index: int) -> void:
 
 func _on_dialogue_manager_ui_update_requested(tokens: Array) -> void:
 	contentUi.text = \"\"
-	
+	is_playing_dialogue = true
 	for token in tokens:
-		
-		if skip_requested_flag:
-			break
-		
 		match token.type:
 			\"text\":
-				await _typing_text(token.value)
+				_update_message_text(token.value)
 			
 			\"pause\":
-				is_typing = false
-				_stop_dialogue_sfx()
-				await _execute_pause(token.value)
+				pass
 	
-	typing_finished.emit()
-	skip_requested_flag = false
+	is_playing_dialogue = false
 "
 
 [node name="DialogueUi" type="CanvasLayer" unique_id=931019690]

@@ -9,6 +9,7 @@ extends Node
 
 signal dialogue_started(messages: Dictionary)
 signal node_changed(next_node: DialogueNode)
+signal ui_update_requested(tokens: Array)
 signal choices_requested(choices: Array)
 signal dialogue_ended
 
@@ -16,7 +17,7 @@ enum DialogueState {
 	IDLE,
 	SHOWING_TEXT,
 	WAITING_INPUT,
-	CHOICE_SELECTION
+	CHOICE_SELECTION,
 }
 
 @onready var dialogueUI = %DialogueUi
@@ -38,19 +39,25 @@ var messages = {
 			{
 				\"text\": \"Goodbye.\",
 				\"next\": \"bye\"
+			},
+			{
+				\"text\": \"Pause test\",
+				\"next\": \"pause\"
 			}
 		]
 	},
-
 	\"who\": {
 		\"speaker\": \"NPC\",
 		\"text\": \"I am the village guard.\",
 	},
-
 	\"bye\": {
 		\"speaker\": \"NPC\",
 		\"text\": \"Farewell traveler.\"
-	}
+	},
+	\"pause\": {
+		\"speaker\": \"System\",
+		\"text\": \"Hello there. [pause=3] How are you?\"
+	},
 }
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -88,11 +95,51 @@ func _on_dialogue_started(messages: Dictionary) -> void:
 	active_node = _dictionary_to_dialogue_node(dialogue_graph.get(\"start\"))
 	node_changed.emit(active_node)
 	dialogueUI.visible = true
-	dialogue_state = DialogueState.SHOWING_TEXT
 
 func _on_node_changed(next: DialogueNode) -> void:
+	var tokens = process_dialogue(next.text)
 	active_node = next
+	ui_update_requested.emit(tokens)
 	dialogue_state = DialogueState.SHOWING_TEXT
+
+func process_dialogue(text: String):
+	var tokens: Array = []
+	
+	var regex := RegEx.new()
+	regex.compile(\"\\\\[pause=(\\\\d+(?:\\\\.\\\\d+)?)\\\\]\")
+	
+	var last_index := 0
+	var matches := regex.search_all(text)
+	
+	for tag in matches:
+		var start := tag.get_start()
+		var end := tag.get_end()
+		
+		# text before tag
+		if start > last_index:
+			var content := text.substr(last_index, start - last_index)
+			tokens.append({
+				\"type\": \"text\",
+				\"value\": content
+			})
+			
+		# Get tag value
+		var pause_value := tag.get_string(1).to_float()
+		tokens.append({
+			\"type\": \"pause\",
+			\"value\": pause_value
+		})
+		
+		last_index = end
+	
+	# remaining text content after last tag
+	if last_index < text.length():
+		tokens.append({
+			\"type\": \"text\",
+			\"value\": text.substr(last_index)
+		})
+	
+	return tokens
 
 func _on_dialogue_ended() -> void:
 	active_node = null
@@ -118,6 +165,7 @@ script = SubResource("GDScript_4jmj1")
 
 [node name="DialogueUi" parent="." unique_id=931019690 instance=ExtResource("1_qwwnv")]
 unique_name_in_owner = true
+typing_speed = 0.03
 
 [connection signal="choices_requested" from="." to="DialogueUi" method="_on_dialogue_manager_choices_requested"]
 [connection signal="dialogue_ended" from="." to="." method="_on_dialogue_ended"]
@@ -125,5 +173,6 @@ unique_name_in_owner = true
 [connection signal="dialogue_started" from="." to="DialogueUi" method="_on_dialogue_manager_dialogue_started"]
 [connection signal="node_changed" from="." to="." method="_on_node_changed"]
 [connection signal="node_changed" from="." to="DialogueUi" method="_on_dialogue_manager_node_changed"]
+[connection signal="ui_update_requested" from="." to="DialogueUi" method="_on_dialogue_manager_ui_update_requested"]
 [connection signal="choice_selected" from="DialogueUi" to="." method="_on_dialogue_ui_choice_selected"]
 [connection signal="typing_finished" from="DialogueUi" to="." method="_on_dialogue_ui_typing_finished"]
