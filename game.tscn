@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://g5krk6dvqegq"]
 
 [ext_resource type="PackedScene" uid="uid://k8pyvoxdx21e" path="res://src/world.tscn" id="1_e2o6t"]
-[ext_resource type="PackedScene" uid="uid://btif4uq0sujjk" path="res://src/system/dialogue/DialogueManager.tscn" id="2_e2o6t"]
+[ext_resource type="PackedScene" uid="uid://c07nqsvnx1fsb" path="res://src/character/character.tscn" id="3_7jktm"]
 
 [sub_resource type="GDScript" id="GDScript_e2o6t"]
 resource_name = "game"
@@ -11,14 +11,14 @@ script/source = "extends Node2D
 "
 
 [node name="Game" type="Node2D" unique_id=452736810]
+y_sort_enabled = true
 script = SubResource("GDScript_e2o6t")
 
 [node name="World" parent="." unique_id=2091352509 instance=ExtResource("1_e2o6t")]
+y_sort_enabled = true
 
-[node name="DialogueManager" parent="." unique_id=1244048051 instance=ExtResource("2_e2o6t")]
+[node name="Players" type="Node2D" parent="." unique_id=170877484]
+y_sort_enabled = true
 
-[connection signal="dialogue_ended" from="DialogueManager" to="." method="_on_dialogue_manager_dialogue_ended"]
-[connection signal="dialogue_ended" from="DialogueManager" to="World/Player" method="_on_dialogue_manager_dialogue_ended"]
-[connection signal="dialogue_started" from="DialogueManager" to="World/Player" method="_on_dialogue_manager_dialogue_started"]
-
-[editable path="World"]
+[node name="Player" parent="Players" unique_id=1830247795 instance=ExtResource("3_7jktm")]
+position = Vector2(32, -8)

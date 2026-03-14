@@ -1,10 +1,10 @@
 [gd_scene format=4 uid="uid://k8pyvoxdx21e"]
 
-[ext_resource type="PackedScene" uid="uid://c07nqsvnx1fsb" path="res://src/character/character.tscn" id="1_tp5op"]
 [ext_resource type="PackedScene" uid="uid://n23uv4g8gm3r" path="res://src/tiles/base_tiles.tscn" id="2_xlegt"]
 [ext_resource type="PackedScene" uid="uid://d1aeqq8ekahvq" path="res://src/objects/basic_chest.tscn" id="3_0qwtu"]
 [ext_resource type="PackedScene" uid="uid://dvdqqxw3jq2rj" path="res://src/objects/table.tscn" id="3_t101k"]
 [ext_resource type="PackedScene" uid="uid://bka5ast3n1qoe" path="res://src/character/enemy/rat.tscn" id="5_36ipd"]
+[ext_resource type="PackedScene" uid="uid://16l8fhad67uo" path="res://src/character/npc/citizen1.tscn" id="6_usxdn"]
 
 [node name="World" type="Node2D" unique_id=2091352509]
 
@@ -57,5 +57,5 @@ position = Vector2(224, 168)
 [node name="Rat6" parent="." unique_id=1275239065 instance=ExtResource("5_36ipd")]
 position = Vector2(208, 272)
 
-[node name="Player" parent="." unique_id=1029270025 instance=ExtResource("1_tp5op")]
-position = Vector2(54.437138, -8.182526)
+[node name="Citizen1" parent="." unique_id=1903615822 instance=ExtResource("6_usxdn")]
+position = Vector2(88, 8)

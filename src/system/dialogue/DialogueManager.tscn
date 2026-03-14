@@ -4,8 +4,7 @@
 
 [sub_resource type="GDScript" id="GDScript_4jmj1"]
 resource_name = "DialogueManager"
-script/source = "class_name DialogueManager
-extends Node
+script/source = "extends Node
 
 signal dialogue_started(messages: Dictionary)
 signal node_changed(next_node: DialogueNode)
@@ -170,7 +169,6 @@ typing_speed = 0.03
 [connection signal="choices_requested" from="." to="DialogueUi" method="_on_dialogue_manager_choices_requested"]
 [connection signal="dialogue_ended" from="." to="." method="_on_dialogue_ended"]
 [connection signal="dialogue_started" from="." to="." method="_on_dialogue_started"]
-[connection signal="dialogue_started" from="." to="DialogueUi" method="_on_dialogue_manager_dialogue_started"]
 [connection signal="node_changed" from="." to="." method="_on_node_changed"]
 [connection signal="node_changed" from="." to="DialogueUi" method="_on_dialogue_manager_node_changed"]
 [connection signal="ui_update_requested" from="." to="DialogueUi" method="_on_dialogue_manager_ui_update_requested"]

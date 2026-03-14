@@ -1,0 +1,82 @@
+[gd_scene format=3 uid="uid://b781ytem5w63k"]
+
+[ext_resource type="Script" uid="uid://b2kvexs17ncnw" path="res://src/character/npc/npc.gd" id="1_5tt72"]
+
+[sub_resource type="Animation" id="Animation_cka5u"]
+resource_name = "idle_down"
+
+[sub_resource type="Animation" id="Animation_5tt72"]
+resource_name = "idle_left"
+
+[sub_resource type="Animation" id="Animation_r2sh1"]
+resource_name = "idle_right"
+
+[sub_resource type="Animation" id="Animation_c3tix"]
+resource_name = "idle_up"
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_af0wn"]
+_data = {
+&"idle_down": SubResource("Animation_cka5u"),
+&"idle_left": SubResource("Animation_5tt72"),
+&"idle_right": SubResource("Animation_r2sh1"),
+&"idle_up": SubResource("Animation_c3tix")
+}
+
+[sub_resource type="GDScript" id="GDScript_5tt72"]
+script/source = "extends Interactable
+
+var messages = {
+	\"start\": {
+		\"speaker\": \"NPC\",
+		\"text\": \"What do you want to do?\",
+		\"choices\": [
+			{
+				\"text\": \"Who are you?\",
+				\"next\": \"who\"
+			},
+			{
+				\"text\": \"Goodbye.\",
+				\"next\": \"bye\"
+			},
+			{
+				\"text\": \"Pause test\",
+				\"next\": \"pause\"
+			}
+		]
+	},
+	\"who\": {
+		\"speaker\": \"NPC\",
+		\"text\": \"I am the village guard.\",
+	},
+	\"bye\": {
+		\"speaker\": \"NPC\",
+		\"text\": \"Farewell traveler.\"
+	},
+	\"pause\": {
+		\"speaker\": \"System\",
+		\"text\": \"Hello there. [pause=3] How are you?\"
+	},
+}
+
+func interact(player: CharacterBody2D):
+	DialogueManager.emit_signal(\"dialogue_started\", messages)
+"
+
+[node name="NPC" type="CharacterBody2D" unique_id=1903615822]
+script = ExtResource("1_5tt72")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=2066558006]
+unique_name_in_owner = true
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1199131278]
+unique_name_in_owner = true
+libraries/ = SubResource("AnimationLibrary_af0wn")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=333531609]
+
+[node name="InteractionArea" type="Area2D" parent="." unique_id=1255035213]
+collision_layer = 128
+collision_mask = 128
+script = SubResource("GDScript_5tt72")
+
+[connection signal="area_entered" from="InteractionArea" to="." method="_on_interaction_area_entered"]

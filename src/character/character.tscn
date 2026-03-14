@@ -42,6 +42,10 @@ var current_anim := \"\"
 var interactables: Array[Interactable] = []
 @onready var interaction_area := $InteractionArea
 
+func _ready() -> void:
+	DialogueManager.connect(\"dialogue_started\", _on_dialogue_started)
+	DialogueManager.connect(\"dialogue_ended\", _on_dialogue_ended)
+
 func _process(delta: float):
 	input_direction = Input.get_vector(\"move_left\", \"move_right\", \"move_up\", \"move_down\")
 	_handle_state_logic()
@@ -193,15 +197,15 @@ func _on_interaction_area_exited(area: Area2D) -> void:
 	if area is Interactable:
 		interactables.erase(area)
 
-func _on_dialogue_manager_dialogue_started(messages: Dictionary) -> void:
+func _on_dialogue_started(messages: Dictionary) -> void:
 	state = CharacterState.DIALOGUE
 
-func _on_dialogue_manager_dialogue_ended() -> void:
+func _on_dialogue_ended() -> void:
 	state = CharacterState.IDLE
 "
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_qdbtw"]
-size = Vector2(8, 12)
+size = Vector2(8, 7)
 
 [sub_resource type="Animation" id="Animation_8mo58"]
 length = 0.001
@@ -663,9 +667,12 @@ _data = {
 size = Vector2(17, 20)
 
 [node name="Player" type="CharacterBody2D" unique_id=1830247795 groups=["player"]]
+y_sort_enabled = true
 collision_layer = 2
 script = SubResource("GDScript_e5t7k")
+speed = null
 arrow_scene = ExtResource("1_2p3op")
+attack_duration = null
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=338028743]
 texture = ExtResource("1_yny20")
@@ -674,7 +681,7 @@ hframes = 8
 vframes = 15
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=2063484729]
-position = Vector2(1, -1)
+position = Vector2(1, -2.5)
 shape = SubResource("RectangleShape2D_qdbtw")
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1015010344]
@@ -684,8 +691,8 @@ libraries/ = SubResource("AnimationLibrary_fi36g")
 position_smoothing_enabled = true
 
 [node name="InteractionArea" type="Area2D" parent="." unique_id=652683717]
-collision_layer = 2
-collision_mask = 8
+collision_layer = 128
+collision_mask = 136
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="InteractionArea" unique_id=1135016240]
 position = Vector2(-0.5, -3)
