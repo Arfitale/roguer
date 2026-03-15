@@ -25,6 +25,8 @@ _data = {
 [sub_resource type="GDScript" id="GDScript_5tt72"]
 script/source = "extends Interactable
 
+@onready var root = $\"..\"
+
 var messages = {
 	\"start\": {
 		\"speaker\": \"NPC\",
@@ -59,7 +61,15 @@ var messages = {
 }
 
 func interact(player: CharacterBody2D):
+	root.emit_signal(\"talk_requested\", player)
 	DialogueManager.emit_signal(\"dialogue_started\", messages)
+"
+
+[sub_resource type="GDScript" id="GDScript_r2sh1"]
+script/source = "extends Node2D
+
+
+
 "
 
 [node name="NPC" type="CharacterBody2D" unique_id=1903615822]
@@ -79,4 +89,8 @@ collision_layer = 128
 collision_mask = 128
 script = SubResource("GDScript_5tt72")
 
+[node name="AIController" type="Node2D" parent="." unique_id=1697054635]
+script = SubResource("GDScript_r2sh1")
+
+[connection signal="talk_requested" from="." to="." method="_on_talk_requested"]
 [connection signal="area_entered" from="InteractionArea" to="." method="_on_interaction_area_entered"]

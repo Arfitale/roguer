@@ -6,13 +6,6 @@
 [sub_resource type="GDScript" id="GDScript_84rhc"]
 resource_name = "citizen"
 script/source = "extends NPC
-
-func _update_animation() -> void:
-	match state:
-		NpcState.IDLE:
-			_play_idle_animation()
-		NpcState.MOVE:
-			_play_move_animation()
 "
 
 [sub_resource type="Animation" id="Animation_84rhc"]
