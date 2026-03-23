@@ -14,18 +14,41 @@ resource_name = "idle_right"
 [sub_resource type="Animation" id="Animation_c3tix"]
 resource_name = "idle_up"
 
+[sub_resource type="Animation" id="Animation_af0wn"]
+resource_name = "move_down"
+step = 0.1
+
+[sub_resource type="Animation" id="Animation_kh64y"]
+resource_name = "move_left"
+step = 0.1
+
+[sub_resource type="Animation" id="Animation_45la0"]
+resource_name = "move_right"
+step = 0.1
+
+[sub_resource type="Animation" id="Animation_ia4js"]
+resource_name = "move_up"
+step = 0.1
+
 [sub_resource type="AnimationLibrary" id="AnimationLibrary_af0wn"]
 _data = {
 &"idle_down": SubResource("Animation_cka5u"),
 &"idle_left": SubResource("Animation_5tt72"),
 &"idle_right": SubResource("Animation_r2sh1"),
-&"idle_up": SubResource("Animation_c3tix")
+&"idle_up": SubResource("Animation_c3tix"),
+&"move_down": SubResource("Animation_af0wn"),
+&"move_left": SubResource("Animation_kh64y"),
+&"move_right": SubResource("Animation_45la0"),
+&"move_up": SubResource("Animation_ia4js")
 }
 
 [sub_resource type="GDScript" id="GDScript_5tt72"]
 script/source = "extends Interactable
 
-@onready var root = $\"..\"
+@onready var npc = $\"..\"
+
+func _ready() -> void:
+	DialogueManager.connect(\"dialogue_ended\", func(): npc.emit_signal(\"talk_finished\"))
 
 var messages = {
 	\"start\": {
@@ -61,15 +84,8 @@ var messages = {
 }
 
 func interact(player: CharacterBody2D):
-	root.emit_signal(\"talk_requested\", player)
+	npc.emit_signal(\"talk_requested\", player)
 	DialogueManager.emit_signal(\"dialogue_started\", messages)
-"
-
-[sub_resource type="GDScript" id="GDScript_r2sh1"]
-script/source = "extends Node2D
-
-
-
 "
 
 [node name="NPC" type="CharacterBody2D" unique_id=1903615822]
@@ -89,8 +105,22 @@ collision_layer = 128
 collision_mask = 128
 script = SubResource("GDScript_5tt72")
 
-[node name="AIController" type="Node2D" parent="." unique_id=1697054635]
-script = SubResource("GDScript_r2sh1")
+[node name="PatrolPoints" type="Node2D" parent="." unique_id=1850732634]
+unique_name_in_owner = true
 
+[node name="Marker2D" type="Marker2D" parent="PatrolPoints" unique_id=349728260]
+
+[node name="IdleTimer" type="Timer" parent="." unique_id=1605895432]
+unique_name_in_owner = true
+one_shot = true
+
+[node name="FacingTurnTimer" type="Timer" parent="." unique_id=725531714]
+unique_name_in_owner = true
+one_shot = true
+
+[connection signal="patrol_point_reached" from="." to="." method="_on_patrol_point_reached"]
+[connection signal="talk_finished" from="." to="." method="_on_talk_finished"]
 [connection signal="talk_requested" from="." to="." method="_on_talk_requested"]
 [connection signal="area_entered" from="InteractionArea" to="." method="_on_interaction_area_entered"]
+[connection signal="timeout" from="IdleTimer" to="." method="_on_idle_timer_timeout"]
+[connection signal="timeout" from="FacingTurnTimer" to="." method="_on_facing_turn_timer_timeout"]
